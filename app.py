@@ -30,5 +30,35 @@ def predict_api():
     output = churn_model.predict(final_df)
     return jsonify(int(output[0]))
 
+@app.route('/predict', methods=['POST'])
+def predict():
+    # Capture form data as a dictionary
+    # This gets values from <input name="salary">, <input name="satisfaction_level">, etc.
+    form_data = request.form.to_dict()
+    df = pd.DataFrame([form_data])
+     # Convert numeric strings to actual numbers
+    numeric_features = [
+        'satisfaction_level', 'last_evaluation', 'number_project', 
+        'average_montly_hours', 'time_spend_company', 
+        'Work_accident', 'promotion_last_5years'
+    ]
+    # Convert only these to float; 'salary' stays as a string
+    df[numeric_features] = df[numeric_features].astype(float)
+     # Use the Encoder for 'salary'
+    salary_encoded = encoder.transform(df[['salary']])
+    salary_df = pd.DataFrame(
+        salary_encoded, 
+        columns=encoder.get_feature_names_out(['salary'])
+    )
+    # Combine numeric data and encoded salary columns
+    # We ignore 'empid' and 'salary' (the string version)
+    final_input = pd.concat([df[numeric_features], salary_df], axis=1)
+    prediction = churn_model.predict(final_input)[0]
+    if prediction == 1:
+        display_text = "Employee is likely to LEAVE."
+    else:
+        display_text = "Employee is likely to STAY."
+    return render_template('home.html', prediction_text='Employee Churn Prediction: {}'.format(display_text))
+
 if __name__ == "__main__":
     app.run(debug=True)
