@@ -2,11 +2,18 @@ import pickle
 from flask import Flask, request, app, jsonify, render_template, url_for
 import numpy as np
 import pandas as pd
+import shap
+import matplotlib.pyplot as plt
+import io
+import base64
+import matplotlib
+matplotlib.use('Agg')
 
 app = Flask(__name__)
 #Load the model
 churn_model = pickle.load(open('churn_model.pkl', 'rb'))
 encoder = pickle.load(open('encoder.pkl', 'rb'))
+explainer = pickle.load(open('explainer.pkl', 'rb'))
 
 @app.route('/')
 def home():
@@ -54,11 +61,24 @@ def predict():
     # We ignore 'empid' and 'salary' (the string version)
     final_input = pd.concat([df[numeric_features], salary_df], axis=1)
     prediction = churn_model.predict(final_input)[0]
+
+    shap_values = explainer(final_input)
+    plt.figure(figsize=(10,6))
+    shap.plots.waterfall(shap_values[0], show=False)
+
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight')
+    plt.close()
+
+    plot_url = base64.b64encode(buf.getbuffer()).decode("utf-8")
+
     if prediction == 1:
         display_text = "Employee is likely to LEAVE."
     else:
         display_text = "Employee is likely to STAY."
-    return render_template('home.html', prediction_text='Employee Churn Prediction: {}'.format(display_text))
+
+    #shap_vaues = explainer(final_input)
+    return render_template('home.html', prediction_text=f'Employee Churn Prediction: {display_text}',shap_plot=plot_url)
 
 if __name__ == "__main__":
     app.run(debug=True)

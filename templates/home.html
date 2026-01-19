@@ -98,6 +98,15 @@
         </div>
         {% endif %}
 
+        {% if shap_plot %}
+            <div id="xai-section" style="margin-top: 20px;">
+                <h3>Explanation of Prediction:</h3>
+                <img src="data:image/png;base64,{{ shap_plot }}" alt="SHAP Plot" style="max-width: 100%; border: 1px solid #ddd; border-radius: 8px;">
+                <p><small>Red bars increase churn risk, blue bars decrease it.</small></p>
+            </div>
+        {% endif %}
+        
+
     </div>
     <script>
     // This changes the URL in the address bar to '/' without reloading the page
