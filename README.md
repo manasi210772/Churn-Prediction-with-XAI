@@ -29,7 +29,7 @@ In this project:
 Two models were evaluated:
 
 - **Random Forest Accuracy:** 91.66%
-- **XGBoost Accuracy:** 99.06% ✅
+- **XGBoost Accuracy:** 99.06% 
 
 Since XGBoost achieved higher accuracy, it was selected as the final trained model for deployment.
 
